@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<title>Heartwood Online Forever sign in</title>
+<style>
+  :root { --bg: #07170f; --panel: #143324; --ink: #efe9d8; --muted: #b7c2b4; --gold: #e2b64a; --green: #4fc46d; --red: #ff9c8a; --line: rgba(226,182,74,.28); }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--ink);
+         font: 16px/1.4 "Segoe UI", system-ui, sans-serif; background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79,196,109,.14), transparent 60%); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 28px 30px; width: min(380px, 92vw); box-shadow: 0 10px 40px #0008; }
+  h1 { margin: 0 0 4px; font-size: 24px; color: var(--gold); }
+  p { margin: 6px 0 14px; color: var(--muted); font-size: 14px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 16px; }
+  button { width: 100%; margin-top: 14px; padding: 11px; border: 0; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .primary { background: var(--green); color: #102; }
+  .primary[disabled] { opacity: .6; cursor: progress; }
+  .secondary { background: transparent; color: var(--muted); text-decoration: underline; margin-top: 6px; font-weight: 400; }
+  .msg { min-height: 20px; margin-top: 12px; font-size: 14px; }
+  .err { color: var(--red); } .ok { color: var(--green); }
+  .sep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin: 18px 0 8px; }
+  .sep::before, .sep::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+  #google { display: flex; justify-content: center; }
+  #captcha { margin-top: 14px; display: flex; justify-content: center; min-height: 65px; }
+  .hp { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  #code { letter-spacing: 6px; font-size: 22px; text-align: center; }
+  .done { text-align: center; }
+  .done h1 { color: var(--green); }
+  a { color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <h1>Heartwood Online Forever</h1>
+  <p id="intro">Sign in to play.</p>
+  <form id="form" autocomplete="on">
+    <label for="email">Email</label>
+    <input id="email" type="email" required autocomplete="username">
+    <label for="password">Password</label>
+    <input id="password" type="password" required minlength="8" autocomplete="current-password">
+    <label for="password2" id="password2Label" hidden>Confirm password</label>
+    <input id="password2" type="password" minlength="8" autocomplete="new-password" hidden>
+    <p id="registerNote" hidden>At least 8 characters. We will email you a 6-digit code to confirm the address before the account can play.</p>
+    <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+    <div id="captcha" hidden></div>
+    <button class="primary" id="submit" type="submit">Sign in</button>
+    <button class="secondary" id="toggle" type="button">New here? Create an account</button>
+  </form>
+  <form id="verifyForm" hidden>
+    <p id="verifyIntro"></p>
+    <label for="code">Verification code</label>
+    <input id="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" placeholder="000000">
+    <button class="primary" id="verifyBtn" type="submit">Verify</button>
+    <button class="secondary" id="resend" type="button">Send a new code</button>
+    <button class="secondary" id="back" type="button">Back</button>
+  </form>
+  <div class="msg" id="msg"></div>
+  <div id="googleWrap" hidden>
+    <div class="sep">or</div>
+    <div id="google"></div>
+  </div>
+</div>
+<script src="../assets/config.js"></script>
+<script>
+// The game's title screen opens this page with ?provider=GOOGLE&platform=WINDOWS&port=N (the game listens on that
+// local port); the page signs the player in through the game server's API (assets/config.js names the server) and
+// hands the token to the game over ws://localhost:N. Same flow and same API as the server's own sign-in page.
+const api = (window.HEARTWOOD_API || "").replace(/\/+$/, "");
+const q = new URLSearchParams(location.search);
+const port = q.get("port"), platform = q.get("platform") || "", provider = (q.get("provider") || "").toUpperCase();
+let mode = "login", captcha = null, widget = null, pendingEmail = "";
+const $ = id => document.getElementById(id);
+if (!port) $("intro").innerHTML = 'Open this page from the game\'s title screen (the game passes its port here). You can still create an account now, or on the <a href="../register.html">register page</a>.';
+
+function say(text, cls) { $("msg").className = "msg" + (cls ? " " + cls : ""); $("msg").textContent = text; }
+async function post(path, body) {
+  const r = await fetch(api + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return r.json();
+}
+
+// Captcha (hCaptcha or Cloudflare Turnstile, whichever the server configured): shown only while creating an account.
+function captchaApi() { return captcha ? window[captcha.provider === "hcaptcha" ? "hcaptcha" : "turnstile"] : null; }
+function showCaptcha(show) {
+  $("captcha").hidden = !show;
+  const lib = captchaApi();
+  if (show && lib && widget === null)
+    widget = captcha.provider === "hcaptcha" ? lib.render("captcha", { sitekey: captcha.site_key, theme: "dark" })
+                                             : lib.render("#captcha", { sitekey: captcha.site_key, theme: "dark" });
+}
+function captchaToken() { const lib = captchaApi(); return lib && widget !== null ? (lib.getResponse(widget) || "") : ""; }
+function captchaReset() { const lib = captchaApi(); if (lib && widget !== null) lib.reset(widget); }
+window.captchaReady = () => { if (mode === "register") showCaptcha(true); };
+
+$("toggle").onclick = () => {
+  mode = mode === "login" ? "register" : "login";
+  $("submit").textContent = mode === "login" ? "Sign in" : "Create account";
+  $("toggle").textContent = mode === "login" ? "New here? Create an account" : "Have an account? Sign in";
+  $("password").autocomplete = mode === "login" ? "current-password" : "new-password";
+  for (const id of ["password2Label", "password2", "registerNote"]) $(id).hidden = mode === "login";
+  $("password2").required = mode === "register"; if (mode === "login") $("password2").value = "";
+  showCaptcha(mode === "register"); say("");
+};
+
+$("form").onsubmit = async e => {
+  e.preventDefault(); say("…");
+  if (mode === "register" && $("password").value !== $("password2").value) { say("The passwords do not match.", "err"); $("password2").focus(); return; }
+  $("submit").disabled = true;
+  try {
+    const body = { email: $("email").value, password: $("password").value, website: $("website").value };
+    if (mode === "register") body.captcha = captchaToken();
+    const j = await post("/api/" + mode, body);
+    if (j.error) { say(j.error, "err"); if (mode === "register") captchaReset(); return; }
+    if (j.pending) { startVerify(j.email); return; }
+    deliver(j.token, "Signed in.");
+  } catch (err) { say("Could not reach the game server: " + err, "err"); }
+  finally { $("submit").disabled = false; }
+};
+
+function startVerify(email) {
+  pendingEmail = email; $("form").hidden = true; $("googleWrap").hidden = true; $("verifyForm").hidden = false;
+  $("verifyIntro").textContent = "We emailed a 6-digit code to " + email + ". Enter it below within 15 minutes (check the spam folder too).";
+  $("code").value = ""; $("code").focus(); say("");
+}
+$("verifyForm").onsubmit = async e => {
+  e.preventDefault(); say("…"); $("verifyBtn").disabled = true;
+  try {
+    const j = await post("/api/verify", { email: pendingEmail, code: $("code").value });
+    if (j.error) { say(j.error, "err"); return; }
+    deliver(j.token, "Account verified.");
+  } catch (err) { say("Could not reach the game server: " + err, "err"); }
+  finally { $("verifyBtn").disabled = false; }
+};
+$("resend").onclick = async () => {
+  say("…");
+  try { const j = await post("/api/resend", { email: pendingEmail }); say(j.error || "A new code is on its way.", j.error ? "err" : "ok"); }
+  catch (err) { say("Could not reach the game server: " + err, "err"); }
+};
+$("back").onclick = () => { $("verifyForm").hidden = true; $("form").hidden = false; $("googleWrap").hidden = !googleShown; say(""); };
+
+// Handing the token to the game: a public https page may not open a WebSocket to the player's own machine (Chrome's
+// Local Network Access rules prompt or block), so the browser is sent to the launcher's loopback address instead,
+// where the server's /deliver page does the local handoff. The token travels in the fragment, which never leaves
+// the browser; the game's port in the query.
+function deliver(token, what) {
+  if (!port) { say(what + " Now press the Google button on the game's title screen and sign in there.", "ok"); return; }
+  $("card").className = "card done"; $("card").innerHTML = "<h1>" + what + "</h1><p>Handing the sign-in to the game…</p>";
+  location.replace("http://127.0.0.1:5005/deliver?port=" + encodeURIComponent(port) + "#" + encodeURIComponent(token));
+}
+
+// Server settings: Google Identity Services with the server's client id, and the captcha provider + site key.
+let googleShown = false;
+fetch(api + "/api/config").then(r => r.json()).then(cfg => {
+  if (cfg.captcha && cfg.captcha.site_key) {
+    captcha = cfg.captcha;
+    const s = document.createElement("script"); s.async = true; s.defer = true;
+    s.src = captcha.provider === "hcaptcha" ? "https://js.hcaptcha.com/1/api.js?render=explicit&onload=captchaReady"
+                                            : "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=captchaReady";
+    document.head.appendChild(s);
+  }
+  if (!cfg.google_client_id) return;
+  googleShown = true; $("googleWrap").hidden = false;
+  const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true;
+  s.onload = () => {
+    google.accounts.id.initialize({ client_id: cfg.google_client_id, callback: resp => deliver(resp.credential, "Signed in with Google."), ux_mode: "popup" });
+    google.accounts.id.renderButton($("google"), { theme: "filled_black", size: "large", text: "signin_with", width: 300 });
+  };
+  document.head.appendChild(s);
+}).catch(() => { say("The game server cannot be reached right now. Please try again in a little while.", "err"); });
+</script>
+</body>
+</html>
