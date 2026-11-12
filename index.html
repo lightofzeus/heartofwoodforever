@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="An independent Heartwood Online fan project in open beta. Download the game for Windows, create an account, and join the community.">
+<meta name="description" content="Heartwood Online Forever is an independent Heartwood Online fan rebuild, now in open beta. Download the game for Windows, create an account, and join the Discord to chat, give suggestions, and report bugs.">
 <meta name="theme-color" content="#07170f">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Heartwood Online Forever — Community Fan Project">
-<meta property="og:description" content="An independent Heartwood Online fan project in open beta. Download the game for Windows, create an account, and join the community.">
+<meta property="og:title" content="Heartwood Online Forever — Open Beta">
+<meta property="og:description" content="Heartwood Online Forever is an independent Heartwood Online fan rebuild, now in open beta. Download the game for Windows, create an account, and join the Discord to chat, give suggestions, and report bugs.">
 <meta property="og:image" content="assets/title-development.png">
-<meta property="og:image:alt" content="Heartwood Online Forever development title screen">
+<meta property="og:image:alt" content="Heartwood Online Forever title screen">
 <meta name="twitter:image" content="assets/title-development.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Heartwood Online Forever">
-<meta name="twitter:description" content="An independent Heartwood Online fan project in open beta. Download the game for Windows, create an account, and join the community.">
+<meta name="twitter:description" content="Heartwood Online Forever is an independent Heartwood Online fan rebuild, now in open beta. Download the game for Windows, create an account, and join the Discord to chat, give suggestions, and report bugs.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Heartwood Online Forever</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&display=swap">
@@ -116,7 +116,7 @@ footer{padding-block:34px;border-top:1px solid var(--line);color:var(--fg-muted)
 footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
 footer small{display:block;max-width:60ch}
 
-@media (prefers-reduced-motion:reduce){.status i{animation:none}.btn{transition:none}html{scroll-behavior:auto}}
+@media (prefers-reduced-motion:reduce){.status i{animation:none}.btn,a.card-link{transition:none}html{scroll-behavior:auto}}
 @media (max-width:520px){body{font-size:17px}.hero{padding-block:36px 56px}.band{padding-block:56px}}
 
 section[id],header[id]{scroll-margin-top:100px}
@@ -124,13 +124,12 @@ section[id],header[id]{scroll-margin-top:100px}
 .skip-link:focus{top:12px}
 .project-note{max-width:64ch;margin:20px auto 0;color:var(--fg-muted);font-size:1rem}
 .status{max-width:100%;text-align:center;letter-spacing:.07em;flex-wrap:wrap;justify-content:center}
-.gallery{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
-figure{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg-3)}
-figure img{display:block;width:100%;height:auto;image-rendering:auto}
-figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
+a.card-link{text-decoration:none;color:inherit;transition:transform .15s ease,border-color .15s ease}
+a.card-link:hover{transform:translateY(-3px);border-color:var(--gold)}
+.card .more{font-family:var(--font-display);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-2);margin-top:4px}
 .gallery-note{color:var(--fg-muted);max-width:65ch}
 .brand{min-width:0}.brand svg{flex-shrink:0}
-@media(max-width:640px){.gallery{grid-template-columns:1fr}.brand{font-size:.8rem;letter-spacing:.02em}.nav ul{gap:12px}.nav ul a{font-size:.7rem}.nav .wrap{justify-content:center}.btn{max-width:100%;justify-content:center}.step h3{line-height:1.5}.step .tag{display:inline-block}.hero h1{overflow-wrap:anywhere}}
+@media(max-width:640px){.brand{font-size:.8rem;letter-spacing:.02em}.nav ul{gap:12px}.nav ul a{font-size:.7rem}.nav .wrap{justify-content:center}.btn{max-width:100%;justify-content:center}.step h3{line-height:1.5}.step .tag{display:inline-block}.hero h1{overflow-wrap:anywhere}}
 </style>
 </head>
 <body>
@@ -168,10 +167,10 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
     <a class="brand" href="#top"><svg><use href="#mark"/></svg>HEARTWOOD ONLINE FOREVER</a>
     <ul>
       <li><a href="#story">The Story</a></li>
-      <li><a href="#preview">Preview</a></li>
-      <li><a href="#features">What's Coming</a></li>
+      <li><a href="#features">In the Beta</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
-      <li><a href="#join">Join</a></li>
+      <li><a href="#community">Community</a></li>
+      <li><a href="#join">Play</a></li>
       <li><a href="register.html">Create account</a></li>
     </ul>
   </div>
@@ -180,7 +179,7 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
 <header class="hero wrap" id="top">
   <svg class="mark" viewBox="0 0 512 512" role="img" aria-label="Heartwood Online Forever logo"><use href="#mark"/></svg>
   <h1>HEARTWOOD<span>ONLINE FOREVER</span></h1>
-  <p class="lede">A familiar world, a new community chapter. An independent fan project rebuilding a place to explore, gather, craft, and adventure together.</p>
+  <p class="lede">The gates are open. An independent fan rebuild of Heartwood Online, now in open beta: download the game, create an account, and explore, gather, craft, and adventure together.</p>
   <div class="cta">
     <a class="btn btn-gold" href="https://github.com/lightofzeus/heartofwoodforever/releases/latest/download/HeartwoodOnlineForever-Setup.exe" id="download">Download for Windows</a>
     <a class="btn btn-ghost" href="register.html">Create account</a>
@@ -188,27 +187,17 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
   </div>
   <div class="status"><i></i>Open beta · version 0.1.1 · Windows 10 / 11</div>
   <div class="status checking" id="server-status" hidden><i></i><span>Checking the server…</span></div>
+  <p class="project-note">It is a beta, so expect rough edges. Found one? Tell us in Discord and it goes on the list.</p>
 </header>
-
-<section class="band band-alt" id="preview" aria-labelledby="preview-heading">
-  <div class="wrap">
-    <div><p class="eyebrow">Development previews</p><h2 id="preview-heading">A look inside the rebuild.</h2></div>
-    <p class="gallery-note">Screenshots from the development client. Interface, visuals, and gameplay may change before public testing.</p>
-    <div class="gallery">
-      <figure><img src="assets/lightning-development.png" width="482" height="441" alt="A development character casts Lightning Strike across the ground toward the west." loading="lazy"><figcaption>Combat testing: aligning Lightning Strike's effect with the character's facing.</figcaption></figure>
-      <figure><img src="assets/title-development.png" width="1922" height="1113" alt="Heartwood Online Forever's title screen over a pixel-art village, with Play and Quit buttons." loading="lazy"><figcaption>The title screen of the beta client.</figcaption></figure>
-    </div>
-  </div>
-</section>
 
 <section class="band" id="story">
   <div class="wrap story">
     <p class="eyebrow">Why we're here</p>
     <h2>A world worth returning to.</h2>
-    <p>Heartwood Online Forever began with an appreciation for Heartwood's world and the friendships built there. This independent fan project is an effort to create another place for that community to gather.</p>
-    <p>Development currently focuses on the essentials: accounts, characters, exploration, combat, gathering, crafting, and multiplayer. These systems are being rebuilt and tested before public access opens.</p>
+    <p>Heartwood Online Forever began with an appreciation for Heartwood's world and the friendships built there. This independent fan project gives that community a place to gather again.</p>
+    <p>The open beta covers the essentials: accounts, characters, exploration, combat, gathering, crafting, and playing together. The server is live, and the rebuild continues in the open, with fixes shipped as players find problems.</p>
     <p class="quote">Built from a love of the world. Shaped by the people who play it.</p>
-    <p>The aim is a reliable, welcoming experience, developed at a sustainable pace. Community feedback will help guide priorities. Features, scope, and release plans may change as testing progresses.</p>
+    <p>The aim is a reliable, welcoming experience, developed at a sustainable pace. Player feedback sets the priorities, so if you want something changed, added, or fixed, say so in Discord. Features, scope, and plans may still change as the beta goes on.</p>
     <p class="sig">— Founder, Heartwood Online Forever</p>
   </div>
 </section>
@@ -216,39 +205,39 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
 <section class="band band-alt" id="features">
   <div class="wrap">
     <div>
-      <p class="eyebrow">What's coming</p>
-      <h2>Familiar adventures. A careful rebuild.</h2>
+      <p class="eyebrow">In the beta</p>
+      <h2>Familiar adventures. Open to everyone.</h2>
     </div>
     <div class="grid">
       <div class="card">
         <svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V9l6-5 6 5v11M10 20v-6h4v6"/></svg>
         <h3>The world you remember</h3>
-        <p>Explore familiar places as world interactions and server systems are rebuilt. Stability and gameplay are still being tested.</p>
+        <p>Walk the familiar places, talk to the townsfolk, and head out into the wild. The world is open to play now; some corners are still being polished.</p>
       </div>
       <div class="card">
         <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/></svg>
-        <h3>Core systems first</h3>
-        <p>Combat, inventory, quests, and multiplayer are under active development, with fixes checked through testing in the game client.</p>
-      </div>
-      <div class="card">
-        <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
-        <h3>Room to grow</h3>
-        <p>Additional quests, items, areas, and events are longer-term goals. The immediate priority is getting the foundations ready for players.</p>
+        <h3>Core systems, live</h3>
+        <p>Combat, inventory, quests, gathering, crafting, and multiplayer are in and playable. Rough edges get smoothed as reports come in.</p>
       </div>
       <div class="card">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
-        <h3>Built with the community</h3>
-        <p>Share ideas, report issues, and follow development in Discord. Feedback from future playtests will help shape the next steps.</p>
+        <h3>Play together</h3>
+        <p>Everyone plays on one shared server. Meet other players in town, group up, and trade. The out-of-game chat lives in Discord.</p>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-4.4A8.4 8.4 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg>
+        <h3>Your feedback shapes it</h3>
+        <p>Suggestions and bug reports from the beta decide what gets built and fixed next. Post them in Discord, and watch them land in the patch notes.</p>
       </div>
       <div class="card">
         <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <h3>Open communication</h3>
-        <p>The commitment is to share progress and communicate changes to the plan. There is no fixed release or update schedule yet.</p>
+        <p>Patch notes, downtime, and changes to the plan are announced in Discord first. There is no fixed update schedule; updates land when they are ready.</p>
       </div>
       <div class="card">
         <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/></svg>
         <h3>Free to play</h3>
-        <p>The project is planned as a free-to-play experience. Public access details will be shared when testing is ready.</p>
+        <p>The game is free. There is nothing to buy to download it, create an account, or play.</p>
       </div>
     </div>
   </div>
@@ -265,40 +254,71 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
         <div class="dot">✓</div>
         <div><h3>The decision</h3><p>The fan project begins, with local development and the first server systems brought online.</p></div>
       </div>
+      <div class="step done">
+        <div class="dot">✓</div>
+        <div><h3>Rebuild and private testing</h3><p>Core systems restored, tested, and fixed behind closed doors until they were ready for players.</p></div>
+      </div>
       <div class="step now">
         <div class="dot">●</div>
-        <div><h3>Rebuild and bug fixing<span class="tag">Now</span></h3><p>Core systems being restored, tested, and fixed. Taking the time to do it right instead of rushing it out broken.</p></div>
-      </div>
-      <div class="step">
-        <div class="dot">2</div>
-        <div><h3>Open beta<span class="tag">Now</span></h3><p>The beta is open: download the game, create an account with your email or Google, and play. Expect rough edges; report them in Discord.</p></div>
-      </div>
-      <div class="step">
-        <div class="dot">3</div>
-        <div><h3>Full launch</h3><p>A wider release is a future milestone, informed by stability testing and feedback from the beta.</p></div>
+        <div><h3>Open beta<span class="tag">Now</span></h3><p>The beta is open: download the game, create an account with your email or Google, and play. Expect rough edges; report them in Discord and they go on the fix list.</p></div>
       </div>
       <div class="step">
         <div class="dot">4</div>
-        <div><h3>Future content</h3><p>Explore opportunities for new quests, items, areas, and events as development capacity allows. These are goals, not release commitments.</p></div>
+        <div><h3>Full launch</h3><p>A wider release is the next milestone, informed by stability during the beta and by what players ask for.</p></div>
       </div>
+      <div class="step">
+        <div class="dot">5</div>
+        <div><h3>Future content</h3><p>New quests, items, areas, and events as development capacity allows. These are goals, not release commitments; your suggestions help pick which come first.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band-alt" id="community">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Community</p>
+      <h2>Join the Discord. It's where everything happens.</h2>
+      <p class="gallery-note">News, patch notes, and playtests are posted in Discord first. It is also the one place to reach the people building the game.</p>
+    </div>
+    <div class="grid">
+      <a class="card card-link" href="https://discord.gg/57Sj8k3aj" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-4.4A8.4 8.4 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg>
+        <h3>Chat with players</h3>
+        <p>Say hello, find people to play with, share screenshots, and swap tips. Old guildmates are probably already there.</p>
+        <span class="more">Open Discord →</span>
+      </a>
+      <a class="card card-link" href="https://discord.gg/57Sj8k3aj" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg>
+        <h3>Give suggestions</h3>
+        <p>Want a feature back, a system changed, or something new? Post the idea. Suggestions from the beta set the order of what gets built.</p>
+        <span class="more">Share an idea →</span>
+      </a>
+      <a class="card card-link" href="https://discord.gg/57Sj8k3aj" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M8 2l1.9 1.9M16 2l-1.9 1.9M9 7V6a3 3 0 0 1 6 0v1M6 13H2M22 13h-4M4 19l3-2M20 19l-3-2M12 20a6 6 0 0 1-6-6v-3a6 6 0 0 1 12 0v3a6 6 0 0 1-6 6zM12 11v9"/></svg>
+        <h3>Report bugs</h3>
+        <p>Something broke, got stuck, or looked wrong? Post what happened, what you expected, and a screenshot if you have one. Every report is read.</p>
+        <span class="more">Report a bug →</span>
+      </a>
     </div>
   </div>
 </section>
 
 <section class="band join" id="join">
   <div class="wrap">
-    <p class="eyebrow">Join the rebuild</p>
-    <h2>Be there when the gates open.</h2>
-    <p>Download the game, create an account, and meet the other players in Discord: that is where news, bug reports and playtests happen.</p>
+    <p class="eyebrow">Play now</p>
+    <h2>Heartwood is open again.</h2>
+    <p>Download the game, create an account, and come find us in Discord to chat, make suggestions, and report what breaks.</p>
     <a class="btn btn-gold" href="https://github.com/lightofzeus/heartofwoodforever/releases/latest/download/HeartwoodOnlineForever-Setup.exe">Download for Windows</a>
+    <a class="btn btn-ghost" href="register.html">Create account</a>
     <a class="btn btn-ghost" href="https://discord.gg/57Sj8k3aj" target="_blank" rel="noopener"><svg><use href="#discord"/></svg>Join the Discord</a>
-    <p class="sig">Come say hello. Follow the progress.</p>
+    <p class="sig">Come say hello. Help shape what comes next.</p>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <div>© 2026 Heartwood Online Forever · A fan-led rebuild</div>
+    <div>© 2026 Heartwood Online Forever · A fan-led rebuild · <a href="https://discord.gg/57Sj8k3aj" target="_blank" rel="noopener">Discord</a></div>
     <small>Heartwood Online Forever is an unofficial, independent fan project. It is not affiliated with or endorsed by Heartwood Online's original developers or publisher. Heartwood Online and its original game assets belong to their respective owners.</small>
   </div>
 </footer>
