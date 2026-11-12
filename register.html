@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Create a Heartwood Online Forever game account with an email and password. Not needed if you sign in with Google.">
+<meta name="theme-color" content="#07170f">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<title>Create account · Heartwood Online Forever</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Same world as index.html: dark forest and gold, one centred column. This page is a single form card. */
+:root{
+  --bg:#07170f; --bg-2:#0d2419; --bg-3:#143324; --fg:#efe9d8; --fg-muted:#b7c2b4;
+  --gold:#e2b64a; --gold-2:#ffe49a; --gold-dim:#9c7420; --leaf:#4fc46d; --warn:#ff9c8a;
+  --line:rgba(226,182,74,.28);
+  --font-display:'Cinzel',Georgia,'Times New Roman',serif;
+  --font-body:'Alegreya',Georgia,'Times New Roman',serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:19px;line-height:1.6;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(79,196,109,.14),transparent 60%)}
+a{color:var(--gold-2)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--leaf);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));width:100%}
+h1,h2{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+.eyebrow{font-family:var(--font-display);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700}
+
+.nav{position:sticky;top:0;z-index:9;background:rgba(7,23,15,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;text-decoration:none;color:var(--gold-2);font-family:var(--font-display);font-weight:700;font-size:1rem;letter-spacing:.06em}
+.brand img{width:40px;height:40px;flex:none}
+.nav ul{list-style:none;display:flex;gap:22px;margin:0;padding:0;flex-wrap:wrap}
+.nav ul a{text-decoration:none;color:var(--fg-muted);font-family:var(--font-display);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase}
+.nav ul a:hover,.nav ul a[aria-current]{color:var(--gold-2)}
+
+main{flex:1;padding-block:56px 72px}
+.sheet{max-width:560px;margin:0 auto;display:grid;gap:22px}
+.sheet h1{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:900;color:var(--gold-2);letter-spacing:.03em}
+.lede{color:var(--fg);font-size:1.15rem}
+.card{background:var(--bg-3);border:1px solid var(--line);border-radius:10px;padding:28px 26px;display:grid;gap:18px}
+.card h2{font-size:1.4rem;color:var(--gold-2)}
+label{display:grid;gap:6px;font-family:var(--font-display);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+input{width:100%;padding:12px 14px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:1.05rem;letter-spacing:normal;text-transform:none}
+input:hover{border-color:var(--gold-dim)}
+input[aria-invalid="true"]{border-color:var(--warn)}
+#code{font-size:1.6rem;letter-spacing:.35em;text-align:center}
+.hint{font-family:var(--font-body);font-size:.95rem;letter-spacing:0;text-transform:none;color:var(--fg-muted)}
+.captcha{display:flex;justify-content:center;min-height:65px}
+.captcha:empty{display:none}
+.hp{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:6px;text-decoration:none;font-family:var(--font-display);font-weight:700;letter-spacing:.08em;font-size:.95rem;border:2px solid var(--gold);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.btn-gold{background:linear-gradient(180deg,var(--gold-2),var(--gold) 55%,var(--gold-dim));color:#1b1200;box-shadow:0 6px 24px rgba(226,182,74,.3)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(226,182,74,.45)}
+.btn-gold[disabled]{opacity:.6;cursor:progress;transform:none}
+.btn-ghost{background:transparent;color:var(--gold-2)}
+.btn-ghost:hover{background:rgba(226,182,74,.1)}
+.message{min-height:1.6em;font-size:1rem}
+.message.error{color:var(--warn)}
+.message.good{color:var(--leaf)}
+.note{color:var(--fg-muted);font-size:1rem}
+.done{display:grid;gap:16px}
+.done h2{font-size:1.4rem;color:var(--leaf)}
+.done ol{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.done strong,.card strong{color:var(--gold-2);overflow-wrap:anywhere}
+[hidden]{display:none!important}
+
+footer{padding-block:34px;border-top:1px solid var(--line);color:var(--fg-muted);font-size:.95rem}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+footer small{display:block;max-width:60ch}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+@media (max-width:640px){body{font-size:17px}main{padding-block:36px 56px}.brand{font-size:.8rem;letter-spacing:.02em}.nav ul{gap:12px}.nav ul a{font-size:.7rem}.nav .wrap{justify-content:center}.card{padding:22px 18px}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main navigation">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/favicon.svg" alt="">HEARTWOOD ONLINE FOREVER</a>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#roadmap">Roadmap</a></li>
+      <li><a href="register.html" aria-current="page">Create account</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="sheet">
+    <div>
+      <p class="eyebrow">Game account</p>
+      <h1>Create your account</h1>
+    </div>
+    <p class="lede">Sign up with an email and a password, confirm the email with the code we send you, then use the same email and password in the game. If you play with your Google account you can skip this page.</p>
+
+    <form class="card" id="signup" novalidate>
+      <label for="email">Email
+        <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required aria-describedby="email-hint">
+        <span class="hint" id="email-hint">A real inbox you can open: a 6-digit code goes there. Temporary or disposable addresses are not accepted.</span>
+      </label>
+      <label for="password">Password
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="200" required aria-describedby="password-hint">
+        <span class="hint" id="password-hint">At least 8 characters.</span>
+      </label>
+      <label for="confirm">Repeat password
+        <input id="confirm" name="confirm" type="password" autocomplete="new-password" maxlength="200" required>
+      </label>
+      <div class="hp" aria-hidden="true"><label for="website">Website<input id="website" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div class="captcha" id="captcha"></div>
+      <button class="btn btn-gold" id="submit" type="submit">Create account</button>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
+    </form>
+
+    <form class="card" id="verify" hidden novalidate tabindex="-1">
+      <h2>Check your email</h2>
+      <p>We sent a 6-digit code to <strong id="verify-email"></strong>. Enter it within 15 minutes. If it is not there, look in the spam folder.</p>
+      <label for="code">Verification code
+        <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+      </label>
+      <button class="btn btn-gold" id="verify-submit" type="submit">Verify</button>
+      <button class="btn btn-ghost" id="resend" type="button">Send a new code</button>
+      <p class="message" id="verify-message" role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="card done" id="done" hidden tabindex="-1">
+      <h2>Your account is verified and ready</h2>
+      <p>Signed up as <strong id="done-email"></strong>.</p>
+      <ol>
+        <li>Open the game and press <strong>Play</strong>.</li>
+        <li>On the sign-in page, enter this email and your password.</li>
+        <li>Create your character and step into Oakwood.</li>
+      </ol>
+      <p class="note">The public beta is not open yet. Your account will be waiting; follow Discord for the date and the download.</p>
+      <a class="btn btn-ghost" href="index.html">Back to the home page</a>
+    </div>
+
+    <p class="note">We keep your email and a scrambled form of your password that cannot be read back. There is no password reset by email yet, so choose one you will remember.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Heartwood Online Forever · A fan-led rebuild</div>
+    <small>Heartwood Online Forever is an unofficial, independent fan project. It is not affiliated with or endorsed by Heartwood Online's original developers or publisher.</small>
+  </div>
+</footer>
+
+<script src="assets/config.js"></script>
+<script>
+(() => {
+  const api = (window.HEARTWOOD_API || "").replace(/\/+$/, "");
+  const $ = id => document.getElementById(id);
+  const form = $("signup"), message = $("message"), button = $("submit");
+  const email = $("email"), password = $("password"), confirm = $("confirm");
+  const verify = $("verify"), code = $("code"), verifyButton = $("verify-submit"), verifyMessage = $("verify-message");
+  const done = $("done");
+  let pendingEmail = "", captcha = null, widget = null;      // the server's captcha settings and the rendered widget
+
+  function say(text, field, where = message, good = false) {
+    where.textContent = text; where.classList.toggle("error", Boolean(text) && !good); where.classList.toggle("good", Boolean(text) && good);
+    for (const input of [email, password, confirm, code]) input.removeAttribute("aria-invalid");
+    if (field) { field.setAttribute("aria-invalid", "true"); field.focus(); }
+  }
+  async function post(path, body) {
+    const reply = await fetch(api + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    return reply.json().catch(() => ({}));
+  }
+
+  // The captcha (hCaptcha or Cloudflare Turnstile, whichever the server runs): the server tells which, and the site key.
+  const captchaApi = () => captcha ? window[captcha.provider === "hcaptcha" ? "hcaptcha" : "turnstile"] : null;
+  window.heartwoodCaptchaReady = () => {
+    const lib = captchaApi(); if (!lib || widget !== null) return;
+    widget = captcha.provider === "hcaptcha" ? lib.render("captcha", { sitekey: captcha.site_key, theme: "dark" })
+                                             : lib.render("#captcha", { sitekey: captcha.site_key, theme: "dark" });
+  };
+  const captchaToken = () => { const lib = captchaApi(); return lib && widget !== null ? (lib.getResponse(widget) || "") : ""; };
+  const captchaReset = () => { const lib = captchaApi(); if (lib && widget !== null) lib.reset(widget); };
+  fetch(api + "/api/config").then(r => r.json()).then(cfg => {
+    if (!cfg.captcha || !cfg.captcha.site_key) return;
+    captcha = cfg.captcha;
+    const s = document.createElement("script"); s.async = true; s.defer = true;
+    s.src = captcha.provider === "hcaptcha" ? "https://js.hcaptcha.com/1/api.js?render=explicit&onload=heartwoodCaptchaReady"
+                                            : "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=heartwoodCaptchaReady";
+    document.head.appendChild(s);
+  }).catch(() => {});
+
+  // The same rules the server applies, checked here first so the answer is immediate.
+  function problem() {
+    const address = email.value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address) || address.length > 254) return ["That does not look like an email address.", email];
+    if (password.value.length < 8) return ["Use at least 8 characters for the password.", password];
+    if (password.value !== confirm.value) return ["The two passwords are not the same.", confirm];
+    if (captcha && !captchaToken()) return ["Please complete the captcha first.", null];
+    return null;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const found = problem();
+    if (found) { say(...found); return; }
+    say(""); button.disabled = true; button.textContent = "Creating…";
+    try {
+      const data = await post("/api/signup", { email: email.value.trim(), password: password.value, captcha: captchaToken(), website: $("website").value });
+      if (data.ok && data.pending) {
+        pendingEmail = data.email; $("verify-email").textContent = data.email;
+        form.hidden = true; verify.hidden = false; code.value = ""; say("", null, verifyMessage); code.focus();
+      } else {
+        say(data.error || "The account could not be created. Please try again.", /email|account/i.test(data.error || "") ? email : null);
+        captchaReset();
+      }
+    } catch (error) {
+      say("The game server cannot be reached right now. Please try again in a little while.");
+    } finally {
+      button.disabled = false; button.textContent = "Create account";
+    }
+  });
+
+  verify.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(code.value.trim())) { say("Enter the 6-digit code from the email.", code, verifyMessage); return; }
+    say("", null, verifyMessage); verifyButton.disabled = true; verifyButton.textContent = "Checking…";
+    try {
+      const data = await post("/api/verify", { email: pendingEmail, code: code.value.trim() });
+      if (data.ok) {
+        $("done-email").textContent = pendingEmail;
+        verify.hidden = true; done.hidden = false; done.focus();
+      } else {
+        say(data.error || "That code could not be checked. Please try again.", code, verifyMessage);
+      }
+    } catch (error) {
+      say("The game server cannot be reached right now. Please try again in a little while.", null, verifyMessage);
+    } finally {
+      verifyButton.disabled = false; verifyButton.textContent = "Verify";
+    }
+  });
+
+  $("resend").addEventListener("click", async () => {
+    say("", null, verifyMessage);
+    try {
+      const data = await post("/api/resend", { email: pendingEmail });
+      say(data.error || "A new code is on its way.", null, verifyMessage, !data.error);
+    } catch (error) {
+      say("The game server cannot be reached right now. Please try again in a little while.", null, verifyMessage);
+    }
+  });
+})();
+</script>
+</body>
+</html>
