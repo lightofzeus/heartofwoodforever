@@ -27,7 +27,7 @@
   #captcha { margin-top: 14px; display: flex; justify-content: center; min-height: 65px; }
   [hidden] { display: none !important; }      /* label { display: block } and #captcha { display: flex } used to beat the hidden attribute */
   .hp { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; }
-  #code { letter-spacing: 6px; font-size: 22px; text-align: center; }
+  #code, #resetCode { letter-spacing: 6px; font-size: 22px; text-align: center; }
   .done { text-align: center; }
   .done h1 { color: var(--green); }
   a { color: var(--gold); }
@@ -56,7 +56,27 @@
     <div id="captcha" hidden></div>
     <label class="keep" for="keep"><input id="keep" type="checkbox" checked> Keep me signed in on this device</label>
     <button class="primary" id="submit" type="submit">Sign in</button>
+    <button class="secondary" id="forgot" type="button">Forgot your password?</button>
     <button class="secondary" id="toggle" type="button">New here? Create an account</button>
+  </form>
+  <form id="forgotForm" hidden>
+    <p>Enter the email address of your account. We will send it a 6-digit code to set a new password.</p>
+    <label for="forgotEmail">Email</label>
+    <input id="forgotEmail" type="email" required autocomplete="username">
+    <button class="primary" id="forgotBtn" type="submit">Email me a reset code</button>
+    <button class="secondary" id="forgotBack" type="button">Back to sign in</button>
+  </form>
+  <form id="resetForm" hidden>
+    <p id="resetIntro"></p>
+    <label for="resetCode">Reset code</label>
+    <input id="resetCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" placeholder="000000">
+    <label for="resetPassword">New password</label>
+    <input id="resetPassword" type="password" required minlength="8" autocomplete="new-password">
+    <label for="resetPassword2">Confirm new password</label>
+    <input id="resetPassword2" type="password" required minlength="8" autocomplete="new-password">
+    <button class="primary" id="resetBtn" type="submit">Set new password</button>
+    <button class="secondary" id="resetResend" type="button">Send a new code</button>
+    <button class="secondary" id="resetBack" type="button">Back to sign in</button>
   </form>
   <form id="verifyForm" hidden>
     <p id="verifyIntro"></p>
@@ -109,6 +129,7 @@ $("toggle").onclick = () => {
   $("toggle").textContent = mode === "login" ? "New here? Create an account" : "Have an account? Sign in";
   $("password").autocomplete = mode === "login" ? "current-password" : "new-password";
   for (const id of ["password2Label", "password2", "registerNote"]) $(id).hidden = mode === "login";
+  $("forgot").hidden = mode !== "login";                                   // only on the sign-in form
   $("password2").required = mode === "register"; if (mode === "login") $("password2").value = "";
   showCaptcha(mode === "register"); say("");
 };
@@ -159,6 +180,44 @@ $("resend").onclick = async () => {
 };
 $("back").onclick = () => { $("verifyForm").hidden = true; $("form").hidden = false; $("googleWrap").hidden = !googleShown; say(""); };
 
+// Forgot password: the address -> a 6-digit code by mail (POST /api/forgot answers the same whether or not the address
+// has an account) -> the code and a new password (POST /api/reset), which also signs the player in.
+let resetEmail = "";
+function showOnly(id) { for (const f of ["form", "verifyForm", "forgotForm", "resetForm"]) $(f).hidden = f !== id; $("googleWrap").hidden = id !== "form" || !googleShown; }
+$("forgot").onclick = () => { showOnly("forgotForm"); $("forgotEmail").value = $("email").value; $("forgotEmail").focus(); say(""); };
+$("forgotBack").onclick = $("resetBack").onclick = () => { showOnly("form"); say(""); };
+async function askReset(email) {
+  const j = await post("/api/forgot", { email: email });
+  if (j.error) { say(j.error, "err"); return false; }
+  resetEmail = email.trim().toLowerCase();
+  $("resetIntro").textContent = "If " + resetEmail + " has an account, a 6-digit code is on its way to it. Enter it below within 15 minutes (check the spam folder too).";
+  return true;
+}
+$("forgotForm").onsubmit = async e => {
+  e.preventDefault(); say("…"); $("forgotBtn").disabled = true;
+  try { if (await askReset($("forgotEmail").value)) { showOnly("resetForm"); $("resetCode").value = ""; $("resetPassword").value = ""; $("resetPassword2").value = ""; $("resetCode").focus(); say(""); } }
+  catch (err) { say("Could not reach the game server: " + err, "err"); }
+  finally { $("forgotBtn").disabled = false; }
+};
+$("resetResend").onclick = async () => {
+  say("…");
+  try { if (await askReset(resetEmail)) say("If a minute has passed since the last one, a new code is on its way.", "ok"); }
+  catch (err) { say("Could not reach the game server: " + err, "err"); }
+};
+$("resetForm").onsubmit = async e => {
+  e.preventDefault();
+  if ($("resetPassword").value !== $("resetPassword2").value) { say("The passwords do not match.", "err"); $("resetPassword2").focus(); return; }
+  say("…"); $("resetBtn").disabled = true;
+  try {
+    const j = await post("/api/reset", { email: resetEmail, code: $("resetCode").value, password: $("resetPassword").value, remember: $("keep").checked });
+    if (j.error) { say(j.error, "err"); return; }
+    keepOrForget(j, resetEmail);
+    if (port) { deliver(j.token, "Password changed."); return; }
+    showOnly("form"); $("email").value = resetEmail; $("password").value = ""; say("Password changed. Press Play on the game's title screen to sign in.", "ok");
+  } catch (err) { say("Could not reach the game server: " + err, "err"); }
+  finally { const b = $("resetBtn"); if (b) b.disabled = false; }
+};
+
 // Handing the token to the game: a public https page may not open a WebSocket to the player's own machine (Chrome's
 // Local Network Access rules prompt or block), so the browser is sent to the launcher's loopback address instead,
 // where the server's /deliver page does the local handoff. The token travels in the fragment, which never leaves
@@ -167,7 +226,7 @@ function deliver(token, what) {
   if (typeof token !== "string" || token.split(".").length !== 3) {     // never hand the game anything but a sign-in token
     say("The sign-in did not complete (the server sent no sign-in token). Please sign in again.", "err"); return;
   }
-  if (!port) { say(what + " Now press the Google button on the game's title screen and sign in there.", "ok"); return; }
+  if (!port) { say(what + " Now press Play on the game's title screen and sign in there.", "ok"); return; }
   $("card").className = "card done"; $("card").innerHTML = "<h1>" + what + "</h1><p>Handing the sign-in to the game…</p>";
   location.replace("http://127.0.0.1:5005/deliver?port=" + encodeURIComponent(port) + "#" + encodeURIComponent(token));
 }
