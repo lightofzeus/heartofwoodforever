@@ -130,6 +130,24 @@ a.card-link:hover{transform:translateY(-3px);border-color:var(--gold)}
 .gallery-note{color:var(--fg-muted);max-width:65ch}
 .brand{min-width:0}.brand svg{flex-shrink:0}
 @media(max-width:640px){.brand{font-size:.8rem;letter-spacing:.02em}.nav ul{gap:12px}.nav ul a{font-size:.7rem}.nav .wrap{justify-content:center}.btn{max-width:100%;justify-content:center}.step h3{line-height:1.5}.step .tag{display:inline-block}.hero h1{overflow-wrap:anywhere}}
+.nav ul{margin-left:auto}
+.nav-status{display:inline-flex;align-items:center;gap:8px;flex:none;padding:5px 12px;border:1px solid var(--line);border-radius:999px;font-family:var(--font-display);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);white-space:nowrap}
+.nav-status b{font-weight:inherit}
+.nav-status i{width:8px;height:8px;border-radius:50%;background:var(--fg-muted)}
+.nav-status.online i{background:var(--leaf);box-shadow:0 0 10px var(--leaf)}
+.nav-status.offline i{background:#ff9c8a;box-shadow:0 0 10px #ff9c8a}
+.nav-right{display:flex;align-items:center;gap:12px;flex:none}
+.nav-play{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:10px;padding:11px 24px;border-radius:8px;border:2px solid var(--gold-2);background:linear-gradient(180deg,#fff3c4,var(--gold) 50%,var(--gold-dim));color:#1b1200;text-decoration:none;font-family:var(--font-display);font-weight:900;font-size:1.05rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;box-shadow:0 0 0 0 rgba(255,228,154,.7),0 6px 22px rgba(226,182,74,.5);animation:play-glow 1.8s ease-out infinite;transition:transform .15s ease}
+.nav-play svg{width:18px;height:18px;fill:currentColor;flex:none}
+.nav-play::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-20deg);animation:play-sheen 2.8s ease-in-out infinite}
+.nav-play:hover{transform:translateY(-2px) scale(1.05)}
+@keyframes play-glow{0%{box-shadow:0 0 0 0 rgba(255,228,154,.75),0 6px 22px rgba(226,182,74,.5)}70%,100%{box-shadow:0 0 0 16px rgba(255,228,154,0),0 6px 22px rgba(226,182,74,.5)}}
+@keyframes play-sheen{0%,55%{left:-60%}100%{left:130%}}
+@media (prefers-reduced-motion:reduce){.nav-play,.nav-play::after{animation:none}.nav-play{transition:none}}
+.nav .wrap{max-width:1440px}
+@media (max-width:1400px){.nav .wrap{justify-content:space-between}.nav-right{order:2;margin-left:auto}.nav ul{order:3;flex-basis:100%;margin-left:0;justify-content:center}}
+@media (max-width:640px){.nav .wrap{justify-content:space-between}.nav-status .w{display:none}.nav-status{padding:4px 10px}.nav-right{gap:8px}.nav-play{padding:9px 16px;font-size:.9rem}}
+@media (max-width:520px){.brand{font-size:0;gap:0}}
 </style>
 </head>
 <body>
@@ -170,9 +188,12 @@ a.card-link:hover{transform:translateY(-3px);border-color:var(--gold)}
       <li><a href="#features">In the Beta</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
       <li><a href="#community">Community</a></li>
-      <li><a href="play.html">Play now</a></li>
       <li><a href="register.html">Create account</a></li>
     </ul>
+    <div class="nav-right">
+      <a class="nav-play" href="play.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z"/></svg>Play now</a>
+      <span class="nav-status checking" id="server-status" role="status" hidden><i></i><span><span class="w">Server </span><b>checking…</b></span></span>
+    </div>
   </div>
 </nav>
 
@@ -186,7 +207,6 @@ a.card-link:hover{transform:translateY(-3px);border-color:var(--gold)}
     <a class="btn btn-ghost" href="https://discord.gg/57Sj8k3aj" target="_blank" rel="noopener"><svg><use href="#discord"/></svg>Join the Discord</a>
   </div>
   <div class="status"><i></i>Open beta · version 0.1.1 · Windows 10 / 11</div>
-  <div class="status checking" id="server-status" hidden><i></i><span>Checking the server…</span></div>
   <p class="project-note">It is a beta, so expect rough edges. Found one? Tell us in Discord and it goes on the list.</p>
 </header>
 
@@ -323,23 +343,6 @@ a.card-link:hover{transform:translateY(-3px);border-color:var(--gold)}
 </footer>
 
 <script src="assets/config.js"></script>
-<script>
-// Live server status in the hero: GET /api/status on the game server (public, read-only) every minute.
-(() => {
-  const api = (window.HEARTWOOD_API || "").replace(/\/+$/, ""), el = document.getElementById("server-status");
-  if (!api || !el) return;
-  const text = el.querySelector("span"); el.hidden = false; let first = true;
-  async function check() {
-    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000);
-    try {
-      const r = await fetch(api + "/api/status?page=" + encodeURIComponent(location.pathname) + "&first=" + (first ? "1" : "0"), { signal: ctl.signal, cache: "no-store" }); const j = await r.json();
-      if (!j.online) throw new Error("offline");
-      el.className = "status online"; text.textContent = "Server online";
-    } catch (e) { el.className = "status offline"; text.textContent = "Server offline · back soon"; }
-    finally { clearTimeout(t); first = false; }
-  }
-  check(); setInterval(check, 60000);
-})();
-</script>
+<script src="assets/status.js"></script>
 </body>
 </html>
