@@ -73,6 +73,9 @@ p{margin:0}
 .hero .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
 .status{display:inline-flex;align-items:center;gap:10px;margin-top:28px;padding:8px 16px;border:1px solid var(--line);border-radius:999px;font-family:var(--font-display);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-muted)}
 .status i{width:10px;height:10px;border-radius:50%;background:var(--leaf);box-shadow:0 0 12px var(--leaf);animation:pulse 2s infinite}
+.status.checking i{background:var(--fg-muted);box-shadow:none;animation:none}
+.status.offline i{background:var(--warn);box-shadow:0 0 12px var(--warn);animation:none}
+.status+.status{margin-left:10px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* bands */
@@ -184,6 +187,7 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
     <a class="btn btn-ghost" href="https://discord.gg/57Sj8k3aj" target="_blank" rel="noopener"><svg><use href="#discord"/></svg>Join the Discord</a>
   </div>
   <div class="status"><i></i>Open beta · version 0.1.1 · Windows 10 / 11</div>
+  <div class="status checking" id="server-status" hidden><i></i><span>Checking the server…</span></div>
 </header>
 
 <section class="band band-alt" id="preview" aria-labelledby="preview-heading">
@@ -299,5 +303,25 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
   </div>
 </footer>
 
+<script src="assets/config.js"></script>
+<script>
+// Live server status in the hero: GET /api/status on the game server (public, read-only) every minute.
+(() => {
+  const api = (window.HEARTWOOD_API || "").replace(/\/+$/, ""), el = document.getElementById("server-status");
+  if (!api || !el) return;
+  const text = el.querySelector("span"); el.hidden = false;
+  async function check() {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000);
+    try {
+      const r = await fetch(api + "/api/status", { signal: ctl.signal, cache: "no-store" }); const j = await r.json();
+      if (!j.online) throw new Error("offline");
+      const n = typeof j.players === "number" ? j.players : null;
+      el.className = "status online"; text.textContent = "Server online" + (n === null ? "" : " · " + n + (n === 1 ? " player" : " players") + " in Oakwood");
+    } catch (e) { el.className = "status offline"; text.textContent = "Server offline · back soon"; }
+    finally { clearTimeout(t); }
+  }
+  check(); setInterval(check, 60000);
+})();
+</script>
 </body>
 </html>
