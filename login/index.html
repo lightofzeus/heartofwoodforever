@@ -116,7 +116,7 @@ $("form").onsubmit = async e => {
     if (j.pending) { startVerify(j.email); return; }
     deliver(j.token, "Signed in.");
   } catch (err) { say("Could not reach the game server: " + err, "err"); }
-  finally { $("submit").disabled = false; }
+  finally { const b = $("submit"); if (b) b.disabled = false; }   // deliver() replaces the card, the button with it
 };
 
 function startVerify(email) {
@@ -129,9 +129,17 @@ $("verifyForm").onsubmit = async e => {
   try {
     const j = await post("/api/verify", { email: pendingEmail, code: $("code").value });
     if (j.error) { say(j.error, "err"); return; }
-    deliver(j.token, "Account verified.");
+    // A server that answers the code with {ok} and no token (it did so for pages on another site, until 2026-11-12):
+    // the account is verified now, so sign in with the password still in the form to get the token.
+    let token = j.token;
+    if (!token) {
+      const k = await post("/api/login", { email: pendingEmail, password: $("password").value });
+      token = k.token;
+      if (!token) { $("back").onclick(); say(k.error || "Your account is verified. Sign in with your email and password.", k.error ? "err" : "ok"); return; }
+    }
+    deliver(token, "Account verified.");
   } catch (err) { say("Could not reach the game server: " + err, "err"); }
-  finally { $("verifyBtn").disabled = false; }
+  finally { const b = $("verifyBtn"); if (b) b.disabled = false; }
 };
 $("resend").onclick = async () => {
   say("…");
@@ -145,6 +153,9 @@ $("back").onclick = () => { $("verifyForm").hidden = true; $("form").hidden = fa
 // where the server's /deliver page does the local handoff. The token travels in the fragment, which never leaves
 // the browser; the game's port in the query.
 function deliver(token, what) {
+  if (typeof token !== "string" || token.split(".").length !== 3) {     // never hand the game anything but a sign-in token
+    say("The sign-in did not complete (the server sent no sign-in token). Please sign in again.", "err"); return;
+  }
   if (!port) { say(what + " Now press the Google button on the game's title screen and sign in there.", "ok"); return; }
   $("card").className = "card done"; $("card").innerHTML = "<h1>" + what + "</h1><p>Handing the sign-in to the game…</p>";
   location.replace("http://127.0.0.1:5005/deliver?port=" + encodeURIComponent(port) + "#" + encodeURIComponent(token));
