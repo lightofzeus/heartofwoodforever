@@ -25,17 +25,25 @@
   .sep::before, .sep::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
   #google { display: flex; justify-content: center; }
   #captcha { margin-top: 14px; display: flex; justify-content: center; min-height: 65px; }
+  [hidden] { display: none !important; }      /* label { display: block } and #captcha { display: flex } used to beat the hidden attribute */
   .hp { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; }
   #code { letter-spacing: 6px; font-size: 22px; text-align: center; }
   .done { text-align: center; }
   .done h1 { color: var(--green); }
   a { color: var(--gold); }
+  .keep { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; cursor: pointer; }
+  .keep input { width: auto; margin: 0; }
+  #rememberedText { font-size: 16px; color: var(--ink); margin: 14px 0 4px; word-break: break-all; }
 </style>
 </head>
 <body>
 <div class="card" id="card">
   <h1>Heartwood Online Forever</h1>
   <p id="intro">Sign in to play.</p>
+  <div id="remembered" hidden>
+    <p id="rememberedText"></p>
+    <button class="secondary" id="switchBtn" type="button">Use a different account</button>
+  </div>
   <form id="form" autocomplete="on">
     <label for="email">Email</label>
     <input id="email" type="email" required autocomplete="username">
@@ -46,6 +54,7 @@
     <p id="registerNote" hidden>At least 8 characters. We will email you a 6-digit code to confirm the address before the account can play.</p>
     <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
     <div id="captcha" hidden></div>
+    <label class="keep" for="keep"><input id="keep" type="checkbox" checked> Keep me signed in on this device</label>
     <button class="primary" id="submit" type="submit">Sign in</button>
     <button class="secondary" id="toggle" type="button">New here? Create an account</button>
   </form>
@@ -109,11 +118,12 @@ $("form").onsubmit = async e => {
   if (mode === "register" && $("password").value !== $("password2").value) { say("The passwords do not match.", "err"); $("password2").focus(); return; }
   $("submit").disabled = true;
   try {
-    const body = { email: $("email").value, password: $("password").value, website: $("website").value };
+    const body = { email: $("email").value, password: $("password").value, website: $("website").value, remember: $("keep").checked };
     if (mode === "register") body.captcha = captchaToken();
     const j = await post("/api/" + mode, body);
     if (j.error) { say(j.error, "err"); if (mode === "register") captchaReset(); return; }
     if (j.pending) { startVerify(j.email); return; }
+    keepOrForget(j, body.email);
     deliver(j.token, "Signed in.");
   } catch (err) { say("Could not reach the game server: " + err, "err"); }
   finally { const b = $("submit"); if (b) b.disabled = false; }   // deliver() replaces the card, the button with it
@@ -127,16 +137,17 @@ function startVerify(email) {
 $("verifyForm").onsubmit = async e => {
   e.preventDefault(); say("…"); $("verifyBtn").disabled = true;
   try {
-    const j = await post("/api/verify", { email: pendingEmail, code: $("code").value });
+    const j = await post("/api/verify", { email: pendingEmail, code: $("code").value, remember: $("keep").checked });
     if (j.error) { say(j.error, "err"); return; }
     // A server that answers the code with {ok} and no token (it did so for pages on another site, until 2026-11-12):
     // the account is verified now, so sign in with the password still in the form to get the token.
-    let token = j.token;
+    let token = j.token, answer = j;
     if (!token) {
-      const k = await post("/api/login", { email: pendingEmail, password: $("password").value });
-      token = k.token;
+      const k = await post("/api/login", { email: pendingEmail, password: $("password").value, remember: $("keep").checked });
+      token = k.token; answer = k;
       if (!token) { $("back").onclick(); say(k.error || "Your account is verified. Sign in with your email and password.", k.error ? "err" : "ok"); return; }
     }
+    keepOrForget(answer, pendingEmail);
     deliver(token, "Account verified.");
   } catch (err) { say("Could not reach the game server: " + err, "err"); }
   finally { const b = $("verifyBtn"); if (b) b.disabled = false; }
@@ -161,6 +172,47 @@ function deliver(token, what) {
   location.replace("http://127.0.0.1:5005/deliver?port=" + encodeURIComponent(port) + "#" + encodeURIComponent(token));
 }
 
+// "Keep me signed in on this device": after a sign-in with the box ticked the server also sends a 30-day REMEMBER
+// token, which this page keeps in the browser's storage for this site (the password itself is never stored). The
+// next time the game opens this page, the token is traded at /api/remember for a fresh sign-in token and handed to
+// the game without typing anything; "Use a different account" (or signing in with the box unticked) forgets it.
+const KEEP_KEY = "hwo_remember"; let autoTimer = null;
+function stored() { try { const v = JSON.parse(localStorage.getItem(KEEP_KEY) || "null"); return v && typeof v.t === "string" ? v : null; } catch (e) { return null; } }
+function forget() { try { localStorage.removeItem(KEEP_KEY); } catch (e) {} }
+function keepOrForget(answer, email) {
+  if (!$("keep").checked) { forget(); return; }
+  try { if (answer && answer.remember) localStorage.setItem(KEEP_KEY, JSON.stringify({ t: answer.remember, e: String(email).trim().toLowerCase() })); } catch (e) {}
+}
+function showForm(text, email) {
+  $("remembered").hidden = true; $("form").hidden = false; $("googleWrap").hidden = !googleShown;
+  if (email) $("email").value = email;
+  say(text || "", text ? "err" : "");
+}
+async function autoSignIn(saved) {
+  try {
+    const j = await post("/api/remember", { remember: saved.t });
+    if (j.token) {
+      try { if (j.remember) localStorage.setItem(KEEP_KEY, JSON.stringify({ t: j.remember, e: j.email || saved.e })); } catch (e) {}
+      deliver(j.token, "Signed in."); return;
+    }
+    if (j.forget) forget();
+    showForm(j.error || "Please sign in again.", saved.e);
+  } catch (err) { showForm("Could not reach the game server: " + err, saved.e); }      // the token is kept: it may work next time
+}
+const saved = stored();
+if (saved) {
+  $("form").hidden = true; $("remembered").hidden = false;
+  if (port) {
+    $("rememberedText").textContent = "Signing in as " + saved.e + "…";
+    autoTimer = setTimeout(() => autoSignIn(saved), 1500);                              // a moment to choose another account
+    $("switchBtn").onclick = () => { clearTimeout(autoTimer); forget(); showForm("", ""); };
+  } else {
+    $("rememberedText").textContent = "This device stays signed in as " + saved.e + ". Press the sign-in button on the game's title screen to play.";
+    $("switchBtn").textContent = "Sign out on this device";
+    $("switchBtn").onclick = () => { forget(); showForm("", ""); };
+  }
+}
+
 // Server settings: Google Identity Services with the server's client id, and the captcha provider + site key.
 let googleShown = false;
 fetch(api + "/api/config?page=" + encodeURIComponent(location.pathname)).then(r => r.json()).then(cfg => {
@@ -172,7 +224,7 @@ fetch(api + "/api/config?page=" + encodeURIComponent(location.pathname)).then(r 
     document.head.appendChild(s);
   }
   if (!cfg.google_client_id) return;
-  googleShown = true; $("googleWrap").hidden = false;
+  googleShown = true; $("googleWrap").hidden = $("form").hidden;      // not over the code step or the remembered-device panel
   const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true;
   s.onload = () => {
     google.accounts.id.initialize({ client_id: cfg.google_client_id, callback: resp => deliver(resp.credential, "Signed in with Google."), ux_mode: "popup" });
