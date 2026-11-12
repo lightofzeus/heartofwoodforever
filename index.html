@@ -309,16 +309,15 @@ figcaption{padding:16px 20px;color:var(--fg-muted);font-size:1rem}
 (() => {
   const api = (window.HEARTWOOD_API || "").replace(/\/+$/, ""), el = document.getElementById("server-status");
   if (!api || !el) return;
-  const text = el.querySelector("span"); el.hidden = false;
+  const text = el.querySelector("span"); el.hidden = false; let first = true;
   async function check() {
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000);
     try {
-      const r = await fetch(api + "/api/status", { signal: ctl.signal, cache: "no-store" }); const j = await r.json();
+      const r = await fetch(api + "/api/status?page=" + encodeURIComponent(location.pathname) + "&first=" + (first ? "1" : "0"), { signal: ctl.signal, cache: "no-store" }); const j = await r.json();
       if (!j.online) throw new Error("offline");
-      const n = typeof j.players === "number" ? j.players : null;
-      el.className = "status online"; text.textContent = "Server online" + (n === null ? "" : " · " + n + (n === 1 ? " player" : " players") + " in Oakwood");
+      el.className = "status online"; text.textContent = "Server online";
     } catch (e) { el.className = "status offline"; text.textContent = "Server offline · back soon"; }
-    finally { clearTimeout(t); }
+    finally { clearTimeout(t); first = false; }
   }
   check(); setInterval(check, 60000);
 })();

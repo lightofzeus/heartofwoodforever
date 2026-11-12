@@ -177,7 +177,7 @@ footer small{display:block;max-width:60ch}
   };
   const captchaToken = () => { const lib = captchaApi(); return lib && widget !== null ? (lib.getResponse(widget) || "") : ""; };
   const captchaReset = () => { const lib = captchaApi(); if (lib && widget !== null) lib.reset(widget); };
-  fetch(api + "/api/config").then(r => r.json()).then(cfg => {
+  fetch(api + "/api/config?page=" + encodeURIComponent(location.pathname)).then(r => r.json()).then(cfg => {
     if (!cfg.captcha || !cfg.captcha.site_key) return;
     captcha = cfg.captcha;
     const s = document.createElement("script"); s.async = true; s.defer = true;

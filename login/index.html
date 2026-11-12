@@ -152,7 +152,7 @@ function deliver(token, what) {
 
 // Server settings: Google Identity Services with the server's client id, and the captcha provider + site key.
 let googleShown = false;
-fetch(api + "/api/config").then(r => r.json()).then(cfg => {
+fetch(api + "/api/config?page=" + encodeURIComponent(location.pathname)).then(r => r.json()).then(cfg => {
   if (cfg.captcha && cfg.captcha.site_key) {
     captcha = cfg.captcha;
     const s = document.createElement("script"); s.async = true; s.defer = true;
