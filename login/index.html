@@ -228,6 +228,18 @@ function deliver(token, what) {
   }
   if (!port) { say(what + " Now press Play on the game's title screen and sign in there.", "ok"); return; }
   $("card").className = "card done"; $("card").innerHTML = "<h1>" + what + "</h1><p>Handing the sign-in to the game…</p>";
+  // The Android game has no launcher, so nothing serves a /deliver page on the phone: this page talks to the game's
+  // own WebSocket on 127.0.0.1 itself (the browser may ask once to allow it). Sends the token as one text message.
+  if (platform.toUpperCase() === "ANDROID") {
+    const done = (title, text) => { $("card").innerHTML = "<h1>" + title + "</h1><p>" + text + "</p>"; };
+    let sent = false;
+    try {
+      const ws = new WebSocket("ws://127.0.0.1:" + encodeURIComponent(port));
+      ws.onopen = () => { ws.send(token); sent = true; setTimeout(() => ws.close(), 500); done(what, "Go back to the game now; this tab can be closed."); };
+      ws.onerror = () => { if (!sent) done("The game is not listening", "Go back to the game, press the sign-in button again, and allow this page to reach the game if the browser asks."); };
+    } catch (e) { done("The game is not listening", "Go back to the game and press the sign-in button again."); }
+    return;
+  }
   location.replace("http://127.0.0.1:5005/deliver?port=" + encodeURIComponent(port) + "#" + encodeURIComponent(token));
 }
 
