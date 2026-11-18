@@ -31,6 +31,7 @@
   .done { text-align: center; }
   .done h1 { color: var(--green); }
   a { color: var(--gold); }
+  a.button { display: block; margin-top: 14px; padding: 11px; border-radius: 6px; font-size: 16px; font-weight: 600; text-decoration: none; text-align: center; }
   .keep { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; cursor: pointer; }
   .keep input { width: auto; margin: 0; }
   #rememberedText { font-size: 16px; color: var(--ink); margin: 14px 0 4px; word-break: break-all; }
@@ -103,6 +104,27 @@ const port = q.get("port"), platform = q.get("platform") || "", provider = (q.ge
 let mode = "login", captcha = null, widget = null, pendingEmail = "";
 const $ = id => document.getElementById(id);
 if (!port) $("intro").innerHTML = 'Open this page from the game\'s title screen (the game passes its port here). You can still create an account now, or on the <a href="../register.html">register page</a>.';
+
+// Android: the game is a plain APK with no launcher to update it, so it tells this page its build number (v=, one
+// base-36 character, written into the sign-in address by tools/android/build_apk.py --build) and assets/android.json
+// names the newest build and where its APK is. An older game (or one from before the number existed) is shown the
+// download instead of the sign-in. If the file cannot be read the sign-in goes ahead.
+const android = platform.toUpperCase() === "ANDROID";
+// Brings the game back to the front after the hand-over: the game's own deep link (its manifest's unitydl filter).
+const RETURN_TO_GAME = "intent://www.heartwoodonline.com/testbutton#Intent;scheme=unitydl;package=com.hwoforever.heartwoodgame;end";
+let mustUpdate = false;
+const updateGate = !android ? Promise.resolve(false) :
+  fetch("../assets/android.json", { cache: "no-store" }).then(r => r.json()).then(a => {
+    const have = parseInt(q.get("v") || "0", 36) || 0;
+    if (!(Number(a.build) > have) || !/^https:\/\//.test(a.apk || "")) return false;
+    mustUpdate = true; clearTimeout(autoTimer);
+    $("card").className = "card done";
+    $("card").innerHTML = '<h1>Update needed</h1><p>A newer version of Heartwood Online Forever for Android is out. ' +
+      'Download it, open the file and tap <b>Update</b>. Your account and characters stay as they are.</p>' +
+      '<a class="button primary" id="apk">Download the update</a><p>Then open the game and sign in again.</p>';
+    $("apk").href = a.apk;
+    return true;
+  }).catch(() => false);
 
 function say(text, cls) { $("msg").className = "msg" + (cls ? " " + cls : ""); $("msg").textContent = text; }
 async function post(path, body) {
@@ -226,16 +248,22 @@ function deliver(token, what) {
   if (typeof token !== "string" || token.split(".").length !== 3) {     // never hand the game anything but a sign-in token
     say("The sign-in did not complete (the server sent no sign-in token). Please sign in again.", "err"); return;
   }
+  if (mustUpdate) return;
   if (!port) { say(what + " Now press Play on the game's title screen and sign in there.", "ok"); return; }
   $("card").className = "card done"; $("card").innerHTML = "<h1>" + what + "</h1><p>Handing the sign-in to the game…</p>";
   // The Android game has no launcher, so nothing serves a /deliver page on the phone: this page talks to the game's
   // own WebSocket on 127.0.0.1 itself (the browser may ask once to allow it). Sends the token as one text message.
-  if (platform.toUpperCase() === "ANDROID") {
+  if (android) {
     const done = (title, text) => { $("card").innerHTML = "<h1>" + title + "</h1><p>" + text + "</p>"; };
     let sent = false;
     try {
       const ws = new WebSocket("ws://127.0.0.1:" + encodeURIComponent(port));
-      ws.onopen = () => { ws.send(token); sent = true; setTimeout(() => ws.close(), 500); done(what, "Go back to the game now; this tab can be closed."); };
+      ws.onopen = () => {
+        ws.send(token); sent = true; setTimeout(() => ws.close(), 500);
+        // back to the game by itself; the button is for a browser that wants a tap before it opens another app
+        $("card").innerHTML = "<h1>" + what + '</h1><p>Returning to the game…</p><a class="button primary" href="' + RETURN_TO_GAME + '">Return to the game</a>';
+        setTimeout(() => { location.href = RETURN_TO_GAME; }, 400);
+      };
       ws.onerror = () => { if (!sent) done("The game is not listening", "Go back to the game, press the sign-in button again, and allow this page to reach the game if the browser asks."); };
     } catch (e) { done("The game is not listening", "Go back to the game and press the sign-in button again."); }
     return;
@@ -260,6 +288,7 @@ function showForm(text, email) {
   say(text || "", text ? "err" : "");
 }
 async function autoSignIn(saved) {
+  if (await updateGate) return;
   try {
     const j = await post("/api/remember", { remember: saved.t });
     if (j.token) {
