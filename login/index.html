@@ -255,6 +255,16 @@ $("resetForm").onsubmit = async e => {
 // Local Network Access rules prompt or block), so the browser is sent to the launcher's loopback address instead,
 // where the server's /deliver page does the local handoff. The token travels in the fragment, which never leaves
 // the browser; the game's port in the query.
+// Android only: how the hand-over to the game went, as a row in the server's audit trail (kind "visit", detail
+// "/login/ handoff <outcome> v=<build> lna=<the browser's permission state>"). It rides on the public status call,
+// which records its ?page= text; nothing about the account or the token is sent.
+async function handoff(outcome) {
+  let lna = "";
+  for (const name of ["loopback-network", "local-network-access"]) {
+    try { lna = name.split("-")[0] + ":" + (await navigator.permissions.query({ name })).state; break; } catch (e) {}
+  }
+  try { fetch(api + "/api/status?page=" + encodeURIComponent(("/login/ handoff " + outcome + " v=" + (q.get("v") || "-") + " lna=" + (lna || "-")).slice(0, 80)), { keepalive: true }).catch(() => {}); } catch (e) {}
+}
 function deliver(token, what) {
   if (typeof token !== "string" || token.split(".").length !== 3) {     // never hand the game anything but a sign-in token
     say("The sign-in did not complete (the server sent no sign-in token). Please sign in again.", "err"); return;
@@ -265,18 +275,47 @@ function deliver(token, what) {
   // The Android game has no launcher, so nothing serves a /deliver page on the phone: this page talks to the game's
   // own WebSocket on 127.0.0.1 itself (the browser may ask once to allow it). Sends the token as one text message.
   if (android) {
-    const done = (title, text) => { $("card").innerHTML = "<h1>" + title + "</h1><p>" + text + "</p>"; };
-    let sent = false;
+    // When the hand-over fails or hangs (the browser's "allow this site to reach apps on this device" question was
+    // refused or is still open, or Android closed the game while the browser was in front), the player is told what to
+    // do and can try again without signing in again; the outcome goes to the server's audit trail (handoff()).
+    const started = Date.now(); let sent = false, failed = false, timer = null;
+    const help = (title, why) => {
+      failed = true; clearTimeout(timer);
+      $("card").className = "card";
+      $("card").innerHTML = "<h1>" + title + "</h1><p>" + what + " " + why + "</p>" +
+        "<p><b>1.</b> If the browser asks to let this site reach apps or devices on your phone, tap <b>Allow</b>. If you blocked it before: " +
+        "tap the icon left of the address bar, open <b>Permissions</b>, allow it (or reset the permissions), then tap Try again.</p>" +
+        "<p><b>2.</b> The game must stay open behind the browser. If it shows its title screen again when you go back, close other apps, " +
+        "press <b>Play</b> in the game and come back here.</p>" +
+        '<button class="primary" id="retry" type="button">Try again</button>';
+      $("retry").onclick = () => deliver(token, what);
+    };
     try {
       const ws = new WebSocket("ws://127.0.0.1:" + encodeURIComponent(port));
       ws.onopen = () => {
-        ws.send(token); sent = true; setTimeout(() => ws.close(), 500);
+        ws.send(token); sent = true; clearTimeout(timer); setTimeout(() => ws.close(), 500);
+        handoff((failed ? "sent-late " : "sent ") + (Date.now() - started) + "ms");
         // back to the game by itself; the button is for a browser that wants a tap before it opens another app
+        $("card").className = "card done";
         $("card").innerHTML = "<h1>" + what + '</h1><p>Returning to the game…</p><a class="button primary" href="' + RETURN_TO_GAME + '">Return to the game</a>';
         setTimeout(() => { location.href = RETURN_TO_GAME; }, 400);
       };
-      ws.onerror = () => { if (!sent) done("The game is not listening", "Go back to the game, press the sign-in button again, and allow this page to reach the game if the browser asks."); };
-    } catch (e) { done("The game is not listening", "Go back to the game and press the sign-in button again."); }
+      ws.onerror = () => {
+        if (sent) return;
+        handoff("error " + (Date.now() - started) + "ms");
+        help("The game did not answer", "But this page could not reach the game on your phone.");
+      };
+      // No answer either way: usually the browser's question is still open (or was dismissed). The socket is left
+      // alone, so an Allow after this still completes the sign-in.
+      timer = setTimeout(() => {
+        if (sent || failed) return;
+        handoff("timeout");
+        help("Waiting for the game", "The game has not answered yet.");
+      }, 8000);
+    } catch (e) {
+      handoff("exception " + String(e).slice(0, 30));
+      help("The game did not answer", "But this page could not reach the game on your phone.");
+    }
     return;
   }
   location.replace("http://127.0.0.1:5005/deliver?port=" + encodeURIComponent(port) + "#" + encodeURIComponent(token));
