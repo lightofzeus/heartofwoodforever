@@ -1,0 +1,2 @@
+isDown=false
+status=Servers are online.
