@@ -119,10 +119,21 @@ const updateGate = !android ? Promise.resolve(false) :
     if (!(Number(a.build) > have) || !/^https:\/\//.test(a.apk || "")) return false;
     mustUpdate = true; clearTimeout(autoTimer);
     $("card").className = "card done";
-    $("card").innerHTML = '<h1>Update needed</h1><p>A newer version of Heartwood Online Forever for Android is out. ' +
+    $("card").innerHTML = '<h1>Update needed</h1><p id="apkText">A newer version of Heartwood Online Forever for Android is out. ' +
       'Download it, open the file and tap <b>Update</b>. Your account and characters stay as they are.</p>' +
       '<a class="button primary" id="apk">Download the update</a><p>Then open the game and sign in again.</p>';
     $("apk").href = a.apk;
+    // The download starts by itself, once per build: the game opens this page again at every sign-in attempt, and a
+    // second automatic start would only pile up copies of the same file (the button stays for that case). A browser
+    // that refuses a download nobody tapped for leaves the page as it is, with the button.
+    const key = "hwo-apk-started", started = (() => { try { return localStorage.getItem(key); } catch (e) { return null; } })();
+    if (started !== String(a.build)) setTimeout(() => {
+      try { localStorage.setItem(key, String(a.build)); } catch (e) {}
+      $("apkText").innerHTML = 'A newer version of Heartwood Online Forever for Android is out and <b>its download has started</b>. ' +
+        'When it finishes, open the file and tap <b>Update</b>. Your account and characters stay as they are.';
+      $("apk").textContent = "Download again";
+      location.href = a.apk;
+    }, 800);
     return true;
   }).catch(() => false);
 
