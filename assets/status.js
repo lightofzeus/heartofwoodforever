@@ -16,13 +16,12 @@
   }
   check(); setInterval(check, 60000);
 })();
-// Android build number and download address: read from assets/android.json (the same file the sign-in page uses
-// for its update prompt), so the pages cannot fall behind a new build. The numbers written in the pages are the fallback.
+// Android download address: read from assets/android.json (the same file the sign-in page uses
+// for its update prompt), so the pages cannot fall behind a new build. The address written in the pages is the fallback.
 (() => {
-  const builds = document.querySelectorAll("[data-android-build]"), links = document.querySelectorAll("a[data-android-apk]");
-  if (!builds.length && !links.length) return;
+  const links = document.querySelectorAll("a[data-android-apk]");
+  if (!links.length) return;
   fetch("assets/android.json", { cache: "no-store" }).then(r => r.json()).then(j => {
-    if (Number.isInteger(j.build)) builds.forEach(e => { e.textContent = j.build; });
     if (typeof j.apk === "string" && j.apk.startsWith("https://")) links.forEach(a => { a.href = j.apk; });
   }).catch(() => {});
 })();
